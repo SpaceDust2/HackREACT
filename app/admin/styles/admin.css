@@ -1,0 +1,70 @@
+/* Стили для контейнера */
+.container {
+    width: 80%;
+    margin: 0 auto;
+  }
+  
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #EEE8DC;
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  /* Стили для хедера */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f0f0f0;
+  }
+  
+  /* Стили для кнопки выхода */
+  .header button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #ff0000;
+    color: #ffffff;
+  }
+  
+  /* Стили для меню */
+  .menu {
+    width: 20%;
+    float: left;
+    z-index: 123;
+    border: 2px solid #741414;
+    border-radius: 30px;
+  }
+  
+  /* Стили для списка вкладок */
+  .menu ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  /* Стили для элементов списка вкладок */
+  .menu li {
+    padding: 10px;
+  }
+  
+  /* Стили для ссылок вкладок */
+  .menu a {
+    text-decoration: none;
+    color: #000000;
+  }
+  
+  /* Стили для активного пункта меню */
+  .menu li.active {
+    background-color: #AB6E6D;
+    color: #ffffff;
+  }
+  
+  /* Стили для содержимого страницы */
+  .content {
+    width: 79%;
+    float: right;
+  }
+  
