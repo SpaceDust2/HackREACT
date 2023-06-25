@@ -40,6 +40,7 @@ function Menu() {
         <li><Link href="/admin/harvest">Уборка урожая</Link></li>
         <li><Link href="/admin/production">Производство</Link></li>
         <li><Link href="/admin/issues">Проблемы и нарушения</Link></li>
+        <li><Link href="/admin/map">Карта</Link></li>
       </ul>
     </div>
   )

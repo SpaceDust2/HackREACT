@@ -1,118 +1,389 @@
-// pages/index.js
 'use client'
-import React, { useState } from "react";
-import {
-  DocumentList,
-  DocumentForm,
-  DocumentView,
-  DocumentSign,
-  DocumentHistory,
-} from "./components/Document";
+import React, { useState } from 'react';
+import { Table, Menu, Modal, Form, Input, Button, message } from 'antd';
+import CryptoJS from 'crypto-js';
+import { saveAs } from 'file-saver';
 
-// Загружаем шаблон документа в формате base64
-import template from "../template.txt";
-
-// Конвертируем base64 в Uint8Array
-const templateBytes = Uint8Array.from(atob(template), (c) => c.charCodeAt(0));
-
-// Создаем начальный список документов
-const initialDocuments = [
+const columns = [
   {
-    id: "1",
-    name: "Договор оказания услуг",
-    data: templateBytes,
-    signed: false,
+    title: 'Название',
+    dataIndex: 'name',
+    key: 'name',
   },
   {
-    id: "2",
-    name: "Акт выполненных работ",
-    data: templateBytes,
-    signed: false,
+    title: 'Дата создания',
+    dataIndex: 'date',
+    key: 'date',
   },
 ];
 
-// Главный компонент страницы
-const Home = () => {
-  const [documents, setDocuments] = useState(initialDocuments);
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [signMode, setSignMode] = useState(false);
-  const [historyMode, setHistoryMode] = useState(false);
+const data = [
+  {
+    key: '1',
+    name: 'Договор на поставку',
+    date: '01.01.2021',
+    template: 'template1',
+    text: 'Текст договора на поставку',
+    signature: '',
+    history: [
+      {
+        date: '01.01.2021',
+        action: 'Создание документа',
+      },
+    ],
+  },
+  {
+    key: '2',
+    name: 'Акт приема-передачи',
+    date: '02.01.2021',
+    template: 'template2',
+    text: 'Текст акта приема-передачи',
+    signature: '',
+    history: [
+      {
+        date: '02.01.2021',
+        action: 'Создание документа',
+      },
+    ],
+  },
+];
 
-  // Функция для добавления нового документа в список
-  const handleCreateDocument = (document) => {
-    setDocuments([...documents, document]);
-    setSelectedDocument(document);
-  };
+const templates = [
+  {
+    key: 'template1',
+    name: 'Договор на поставку',
+    text: 'Текст договора на поставку',
+  },
+  {
+    key: 'template2',
+    name: 'Акт приема-передачи',
+    text: 'Текст акта приема-передачи',
+  },
+  {
+    key: 'template3',
+    name: 'Счет-фактура',
+    text: 'Текст счет-фактуры',
+  },
+  {
+    key: 'template4',
+    name: 'Доверенность',
+    text: 'Текст доверенности',
+  },
+  {
+    key: 'template5',
+    name: 'Акт сверки',
+    text: 'Текст акта сверки',
+  },
+];
 
-  // Функция для обновления существующего документа в списке
-  const handleEditDocument = (document) => {
-    setDocuments(documents.map((doc) => (doc.id === document.id ? document : doc)));
-    setSelectedDocument(document);
-  };
+const layout = {
+  labelCol: {
+    span: 8,
+  },
+  wrapperCol: {
+    span: 16,
+  },
+};
 
-  // Функция для подписания существующего документа в списке
-  const handleSignDocument = (document) => {
-    setDocuments(documents.map((doc) => (doc.id === document.id ? document : doc)));
-    setSelectedDocument(document);
-    setSignMode(false);
-  };
+const tailLayout = {
+  wrapperCol: {
+    offset: 8,
+    span: 16,
+  },
+};
 
-  // Функция для переключения режима подписания документа
-  const toggleSignMode = (document) => {
-    setSignMode(!signMode);
-    setSelectedDocument(document);
-  };
+const Templates = ({ document, onCreate }) => {
+  const [form] = Form.useForm();
 
-  // Функция для переключения режима просмотра истории документа
-      // Продолжение кода для компонента Home
-      const toggleHistoryMode = (document) => {
-        setHistoryMode(!historyMode);
-        setSelectedDocument(document);
+  const onFinish = async (values) => {
+    try {
+      const template = templates.find((t) => t.key === values.template);
+      const newDocument = {
+        key: String(data.length + 1),
+        name: values.name,
+        date: new Date().toLocaleDateString(),
+        template: values.template,
+        text: template.text.replace(/\{\{name\}\}/g, values.name),
+        signature: '',
+        history: [
+          {
+            date: new Date().toLocaleDateString(),
+            action: 'Создание документа',
+          },
+        ],
       };
-    
-      // Функция для получения истории документа
-      const getDocumentHistory = (document) => {
-        // Ищем все документы, которые имеют тот же хеш, что и выбранный документ
-        const hash = KJUR.crypto.Util.sha256(document.data);
-        const history = documents.filter(
-          (doc) => KJUR.crypto.Util.sha256(doc.data) === hash
-        );
-        return history;
-      };
-    
-      return (
-        <div className="home">
-          <DocumentList documents={documents} onSelect={setSelectedDocument} />
-          {selectedDocument ? (
-            <>
-              {signMode ? (
-                <DocumentSign
-                  document={selectedDocument}
-                  onConfirm={handleSignDocument}
-                />
-              ) : historyMode ? (
-                <DocumentHistory
-                  document={selectedDocument}
-                  history={getDocumentHistory(selectedDocument)}
-                  onSelect={setSelectedDocument}
-                />
-              ) : (
-                <DocumentView
-                  document={selectedDocument}
-                  onEdit={handleEditDocument}
-                  onSign={toggleSignMode}
-                />
-              )}
-              <button onClick={() => setSelectedDocument(null)}>
-                Вернуться к списку документов
-              </button>
-            </>
-          ) : (
-            <DocumentForm template={templateBytes} onSubmit={handleCreateDocument} />
-          )}
-        </div>
-      );
+      data.push(newDocument);
+      message.success('Документ успешно создан');
+      onCreate(newDocument);
+      form.resetFields();
+    } catch (error) {
+      console.error(error);
+      message.error('Не удалось создать документ');
+    }
+  };
+
+  const onFinishFailed = (errorInfo) => {
+    console.log('Failed:', errorInfo);
+  };
+
+  return (
+    <Form
+      form={form}
+      {...layout}
+      name="basic"
+      initialValues={{
+        remember: true,
+      }}
+      onFinish={onFinish}
+      onFinishFailed={onFinishFailed}
+    >
+      <Form.Item
+        label="Название документа"
+        name="name"
+        rules={[
+          {
+            required: true,
+            message: 'Введите название документа!',
+          },
+        ]}
+      >
+        <Input />
+      </Form.Item>
+
+      <Form.Item
+        label="Шаблон"
+        name="template"
+        rules={[
+          {
+            required: true,
+            message: 'Выберите шаблон!',
+          },
+        ]}
+      >
+        <select>
+          {templates.map((template) => (
+            <option key={template.key} value={template.key}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+      </Form.Item>
+
+      <Form.Item {...tailLayout}>
+        <Button type="primary" htmlType="submit">
+          Создать
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+};
+
+const DocumentModal = ({ document, visible, onClose, onCreate }) => {
+    const [text, setText] = useState(document.text);
+    const [signature, setSignature] = useState(document.signature);
+  
+    const handleTextChange = (event) => {
+      setText(event.target.value);
     };
-    
-    export default Home;
-    
+  
+    const handleSignClick = () => {
+      const secretKey = 'my-secret-key';
+      const hash = CryptoJS.HmacSHA256(text, secretKey);
+      const signature = hash.toString(CryptoJS.enc.Base64);
+      setSignature(signature);
+      document.signature = signature;
+      document.history.push({
+        date: new Date().toLocaleDateString(),
+        action: 'Подписание документа',
+      });
+    };
+  
+    const handleCreateClick = () => {
+      onCreate(document);
+    };
+  
+    const handleDownloadClick = () => {
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      saveAs(blob, `${document.name}.txt`);
+    };
+  
+    const relatedDocuments = data.filter(
+      (item) => item.template === document.template && item.key !== document.key
+    );
+  
+    return (
+      <Modal
+        title={document.name}
+        visible={visible}
+        onCancel={onClose}
+        footer={[
+          <Button key="create" type="primary" onClick={handleCreateClick}>
+            Создать на основе
+          </Button>,
+          <Button key="sign" type="primary" onClick={handleSignClick}>
+            Подписать
+          </Button>,
+          <Button key="download" onClick={handleDownloadClick}>
+            Скачать
+          </Button>,
+          <Button key="close" onClick={onClose}>
+            Закрыть
+          </Button>,
+        ]}
+      >
+        <Input.TextArea value={text} onChange={handleTextChange} />
+        <Input value={signature} />
+        <div>
+          <h3>История документа</h3>
+          {document.history.map((item, index) => (
+            <div key={index}>
+              <p>{item.date}</p>
+              <p>{item.action}</p>
+            </div>
+          ))}
+        </div>
+        <div>
+          <h3>Связанные документы</h3>
+          {relatedDocuments.map((item) => (
+            <p key={item.key}>{item.name}</p>
+          ))}
+        </div>
+      </Modal>
+    );
+  };
+  
+
+const DocumentHistory = ({ document }) => {
+    const relatedDocuments = data.filter(
+      (item) => item.template === document.template && item.key !== document.key
+    );
+  
+    return (
+      <div>
+        <h2>{document.name}</h2>
+        <h3>История документа</h3>
+        {document.history.map((item, index) => (
+          <div key={index}>
+            <p>{item.date}</p>
+            <p>{item.action}</p>
+          </div>
+        ))}
+        <div>
+          <h3>Связанные документы</h3>
+          {relatedDocuments.map((item) => (
+            <p key={item.key}>{item.name}</p>
+          ))}
+        </div>
+      </div>
+    );
+  };
+  
+
+const App = () => {
+  const [page, setPage] = useState('documents');
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [documentModalVisible, setDocumentModalVisible] = useState(false);
+
+  const handleMenuClick = (event) => {
+    setPage(event.key);
+  };
+
+  const handleDocumentClick = (document) => {
+    setSelectedDocument(document);
+    setDocumentModalVisible(true);
+  };
+
+  const handleDocumentModalClose = () => {
+    setSelectedDocument(null);
+    setDocumentModalVisible(false);
+  };
+
+  const handleCreateDocument = (document) => {
+    setSelectedDocument(document);
+    setDocumentModalVisible(false);
+    setPage('templates');
+  };
+  const [filterDate, setFilterDate] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  
+  const renderPage = () => {
+    let filteredData = data;
+  
+    // Фильтрация по дате
+    if (filterDate) {
+      filteredData = filteredData.filter((item) => item.date === filterDate);
+    }
+  
+    // Поиск по словам
+    if (searchKeyword) {
+      const keyword = searchKeyword.toLowerCase();
+      filteredData = filteredData.filter((item) => {
+        const name = item.name.toLowerCase();
+        const text = item.text.toLowerCase();
+        return name.includes(keyword) || text.includes(keyword);
+      });
+    }
+  
+    switch (page) {
+      case 'documents':
+        return (
+          <>
+            <div>
+              Фильтр по дате:
+              <Input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+              />
+            </div>
+            <div>
+              Поиск по словам:
+              <Input.Search
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+              />
+            </div>
+            <Table
+              columns={columns}
+              dataSource={filteredData}
+              onRow={(record) => ({
+                onClick: () => handleDocumentClick(record),
+              })}
+            />
+          </>
+        );
+      case 'templates':
+        return (
+          <Templates
+            document={selectedDocument}
+            onCreate={handleCreateDocument}
+          />
+        );
+      case 'document-history':
+        return <DocumentHistory document={selectedDocument} />;
+      default:
+        return null;
+    }
+  };
+  
+
+  return (
+    <>
+      <Menu mode="horizontal" onClick={handleMenuClick}>
+        <Menu.Item key="documents">Документы</Menu.Item>
+        <Menu.Item key="templates">Шаблоны</Menu.Item>
+      </Menu>
+      {renderPage()}
+      {selectedDocument && (
+        <DocumentModal
+        document={selectedDocument}
+        visible={documentModalVisible}
+        onClose={handleDocumentModalClose}
+        onCreate={handleCreateDocument}
+        />
+        )}
+        </>
+        );
+        };
+        export default App;
+        
